@@ -1,1 +1,127 @@
-Hello Worldsss
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interpreter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .container-fluid {
+            padding:0;
+            flex: 1;
+            display: flex;
+        }
+        .left-panel {
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .left-panel a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #495057;
+        }
+        .left-panel a:hover {
+            background-color: #6c757d;
+        }
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+        }
+        .chat-input {
+            margin-top: 15px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .message.user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .message.maude {
+            background-color: #e9ecef;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="col-md-4 col-lg-3 left-panel">
+            <h4>Sessions</h4>
+            <a href="#">CITP - Session 1</a>
+            <a href="#">CafeInMaude - Session 2</a>
+            <a href="#">CafeInMaude - Session 3</a>
+            <a href="#">CITP - Session 4</a>
+            <!-- Add more sessions here -->
+        </div>
+        <div class="col-md-8 col-lg-9 chat-panel">
+            <div class="chat-box">
+                <!-- Demonstration messages -->
+                <div class="message user">
+                    <strong>User:</strong> What is the result of 2 + 2 in Maude?
+                </div>
+                <div class="message maude">
+                    <strong>Maude:</strong> Maude> 4
+                </div>
+
+                <div class="message user">
+                    <strong>User:</strong> Can you show me an example of a rewrite rule?
+                </div>
+                <div class="message maude">
+                    <strong>Maude:</strong> Sure! Here is a simple rewrite rule:<br><br>
+                    ```<br>
+                    eq (X + 0) = X .<br>
+                    eq (0 + X) = X .<br>
+                    ```
+                </div>
+
+                <div class="message user">
+                    <strong>User:</strong> What about a conditional rule?
+                </div>
+                <div class="message maude">
+                    <strong>Maude:</strong> Here’s an example of a conditional rule:<br><br>
+                    ```<br>
+                    crl [rule] : X + Y => Z if X == 0 .<br>
+                    ```
+                </div>
+
+                
+            </div>
+            <div class="chat-input">
+                <form action="#">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Type a message...">
+                        <button class="btn btn-primary" type="submit">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
