@@ -6,4 +6,11 @@ COPY . /app
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["gunicorn", "-w", "3", "WebMaude.wsgi:application", "-b", "0.0.0.0:8000"]
+# Copiar el script de inicio
+COPY entrypoint.sh /app/entrypoint.sh
+
+# Dar permisos de ejecución al script
+RUN chmod +x /app/entrypoint.sh
+
+# Usar el script de inicio como el comando principal
+CMD ["/app/entrypoint.sh"]
