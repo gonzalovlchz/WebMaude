@@ -13,7 +13,7 @@
             flex-direction: column;
         }
         .container-fluid {
-            padding:0;
+            padding: 0;
             flex: 1;
             display: flex;
         }
@@ -21,6 +21,9 @@
             background-color: #343a40;
             color: white;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             overflow-y: auto;
         }
         .left-panel a {
@@ -68,17 +71,34 @@
             background-color: #e9ecef;
             align-self: flex-start;
         }
+        .user-info {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #495057;
+        }
+        .user-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #adb5bd;
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid">
         <div class="col-md-4 col-lg-3 left-panel">
-            <h4>Sessions</h4>
-            <a href="#">CITP - Session 1</a>
-            <a href="#">CafeInMaude - Session 2</a>
-            <a href="#">CafeInMaude - Session 3</a>
-            <a href="#">CITP - Session 4</a>
-            <!-- Add more sessions here -->
+            <div>
+                <h4>Sessions</h4>
+                <a href="#">CITP - Session 1</a>
+                <a href="#">CafeInMaude - Session 2</a>
+                <a href="#">CafeInMaude - Session 3</a>
+                <a href="#">CITP - Session 4</a>
+                <!-- Add more sessions here -->
+            </div>
+            <div class="user-info">
+                <p>Logged in as:</p>
+                <strong>{{ user.username }}</strong>
+                <a href="/acl/logout" class="btn btn-sm btn-danger mt-2">Logout</a>
+            </div>
         </div>
         <div class="col-md-8 col-lg-9 chat-panel">
             <div class="chat-box">
@@ -110,8 +130,6 @@
                     crl [rule] : X + Y => Z if X == 0 .<br>
                     ```
                 </div>
-
-                
             </div>
             <div class="chat-input">
                 <form action="#">
