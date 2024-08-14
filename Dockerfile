@@ -1,5 +1,5 @@
 # Use an appropriate base image
-FROM debian:stable
+FROM Ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive 
 
 # Install necessary packages
