@@ -1,6 +1,6 @@
-# Dockerfile-debian
-FROM debian:sid
-RUN apt update && apt-get install -y python3.12 python3.12-venv python3.12-dev python3-pip
+FROM ubuntu:latest
+RUN apt-get update -y
+RUN apt-get install -y python3-pip python-dev build-essential
 
 # Set the working directory
 WORKDIR /app
