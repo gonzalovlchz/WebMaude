@@ -75,13 +75,21 @@ WSGI_APPLICATION = 'WebMaude.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         "NAME": "maude",
         "USER": "maude",
         "PASSWORD": "qHQa&9a5L*",
-        "HOST": "localhost",
+        "HOST": "192.168.1.56",
+    }
+}"""
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

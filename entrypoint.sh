@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Ejecutar migraciones
 /app/.venv/bin/python manage.py migrate
@@ -8,4 +8,4 @@ export DJANGO_SUPERUSER_PASSWORD='root'
 
 # Iniciar Gunicorn
 #/app/.venv/bin/python -m gunicorn -w 3 WebMaude.wsgi:application -b 0.0.0.0:8000
-/app/.venv/bin/python manage.py runserver
+/app/.venv/bin/python manage.py runserver 0.0.0.0:8000

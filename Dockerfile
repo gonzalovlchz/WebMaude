@@ -1,4 +1,7 @@
 FROM debian:sid
+
+EXPOSE 8000
+
 RUN apt-get update; apt-get -y install python3.12 python3-pip python3.12-venv
 
 # Set the working directory

@@ -81,7 +81,7 @@ def add_message(request, session_id):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-def get_execute_new_command(request):
+def post_execute_new_command(request):
     if request.method == 'POST':
         user = request.user
         session_id = request.POST["session"]

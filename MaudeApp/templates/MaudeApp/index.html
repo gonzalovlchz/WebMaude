@@ -136,7 +136,7 @@
                 </div>
             </div>
             <div class="chat-input">
-                <form action="chat/get_execute_new_command" method="post">
+                <form action="chat/post_execute_new_command" method="post">
                     {% csrf_token %}
                     <input type="hidden" name="session" value="3">
                     <div class="input-group">
