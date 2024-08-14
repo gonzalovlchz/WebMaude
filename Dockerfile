@@ -1,6 +1,5 @@
 # Use an appropriate base image
-FROM ubuntu:22.04
-ENV DEBIAN_FRONTEND=noninteractive 
+FROM python3.12
 
 # Install necessary packages
 RUN apt-get update \
