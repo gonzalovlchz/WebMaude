@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 RUN apt-get update -y
-RUN apt-get install -y python3-pip python3.12-dev build-essential
+RUN apt-get install -y python3.12 build-essential pipx
 
 # Set the working directory
 WORKDIR /app
@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . /app
 
 # Install Python dependencies
-RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
+RUN pipx install --no-cache-dir -r requirements.txt
 
 # Set the MAUDE_LIB environment variable
 # Adjust the paths to match where Maude and CITP are within /app
