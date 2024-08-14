@@ -1,6 +1,6 @@
 # Dockerfile-debian
 FROM debian:sid
-RUN apt update && apt install -y python3.12-venv
+RUN apt update && apt install -y python3.12 python3.12-venv python3.12-dev 
 
 # Set the working directory
 WORKDIR /app
