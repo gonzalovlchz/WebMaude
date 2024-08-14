@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Interpreter</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body, html {
+        body,
+        html {
             height: 100%;
             margin: 0;
             display: flex;
             flex-direction: column;
         }
+
         .container-fluid {
             padding: 0;
             flex: 1;
             display: flex;
         }
+
         .left-panel {
             background-color: #343a40;
             color: white;
@@ -26,6 +30,7 @@
             justify-content: space-between;
             overflow-y: auto;
         }
+
         .left-panel a {
             color: white;
             text-decoration: none;
@@ -35,47 +40,57 @@
             border-radius: 5px;
             background-color: #495057;
         }
+
         .left-panel a:hover {
             background-color: #6c757d;
         }
+
         .chat-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             background-color: #f8f9fa;
             padding: 20px;
+            max-height: 100vh;
         }
+
         .chat-box {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: scroll;
             padding: 15px;
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
         }
+
         .chat-input {
             margin-top: 15px;
         }
+
         .message {
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 5px;
             max-width: 80%;
         }
+
         .message.user {
             background-color: #007bff;
             color: white;
             align-self: flex-end;
         }
+
         .message.maude {
             background-color: #e9ecef;
             align-self: flex-start;
         }
+
         .user-info {
             margin-top: auto;
             padding-top: 20px;
             border-top: 1px solid #495057;
         }
+
         .user-info p {
             margin: 0;
             font-size: 14px;
@@ -83,20 +98,15 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="col-md-4 col-lg-3 left-panel">
             <div>
                 <h4>Sessions</h4>
-                <form method="post" action="chat/start_new_session">
-                    {% csrf_token %}
-                    <button type="submit">Nueva sesión</button>
-                </form>
-                <a href="#">CITP - Session 1</a>
-                <a href="#">CafeInMaude - Session 2</a>
-                <a href="#">CafeInMaude - Session 3</a>
-                <a href="#">CITP - Session 4</a>
-                <!-- Add more sessions here -->
+                <button class="btn btn-primary" id="btn_new_session">New</button>
+                <div id="div_session_list">
+                </div>
             </div>
             <div class="user-info">
                 <p>Logged in as:</p>
@@ -104,9 +114,9 @@
                 <a href="/acl/logout" class="btn btn-sm btn-danger mt-2">Logout</a>
             </div>
         </div>
-        <div class="col-md-8 col-lg-9 chat-panel">
-            <div class="chat-box">
-                <!-- Demonstration messages -->
+        <div class="col-md-8 col-lg-9 chat-panel" id="div_chat_panel">
+            <!--<div class="chat-box">
+                
                 <div class="message user">
                     <strong>User:</strong> What is the result of 2 + 2 in Maude?
                 </div>
@@ -145,7 +155,68 @@
                     </div>
                 </form>
             </div>
+        -->
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $.getJSON("/chat/get_all_sessions").done(function (data) {
+                console.log(data);
+                data.sessions.forEach(s => {
+                    $("#div_session_list").append("<a href='#' data-id=" + s["id"] + " class='a_session_list'>" + s["created_at"] + "</a>");
+                });
+                $(".a_session_list").click(function () {
+                    show_chat_session($(this).data("id"));
+                });
+            });
+            $("#btn_new_session").click(function () {
+                $.ajax({
+                    url: "/chat/start_new_session",
+                    method: "POST",
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    data: [],
+                    dataType: "json"
+                }).done(function () {
+                    location.reload();
+                })
+            });
+
+
+        });
+        function show_chat_session(session_id) {
+            $("#div_chat_panel").empty();
+            $.getJSON("/chat/get_chat_session?session=" + session_id).done(function (data) {
+                console.log(data);
+                $("#div_chat_panel").html('<div class="chat-box" id="div_chat_box"></div><div class="chat-input"><div class="input-group"><input type="text" id="input_command" class="form-control" value="show proof PR.REV " placeholder="Type a message..."><button class="btn btn-primary" id="btn_send_command" data-session-id="' + session_id + '">Send</button></div></div>');
+                data.commands.forEach(c => {
+                    $("#div_chat_box").append('<div class="message user">' + c["input_text"] + '</div><div class="message maude">' + c["output_text"] + '</div>')
+                });
+
+                $("#btn_send_command").click(function () {
+                    $("#div_chat_box").append('<div class="message user">' + $("#input_command").val() + '</div>')
+                    $.ajax({
+                        url: "/chat/post_execute_new_command",
+                        method: "POST",
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        data: {
+                            "session": $(this).data("session-id"),
+                            "command": $("#input_command").val()
+                        },
+                        dataType: "json"
+                    }).done(function (data) {
+                        $("#div_chat_box").append('<div class="message maude">' + data.output + '</div>')
+                        $("#div_chat_box").animate({ scrollTop: $('#div_chat_box').prop("scrollHeight")}, 1000);
+                        $("#input_command").val("");
+                    })
+                });
+            });
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
 </body>
+
 </html>

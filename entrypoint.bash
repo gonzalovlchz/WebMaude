@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Ejecutar migraciones
 /app/.venv/bin/python manage.py migrate

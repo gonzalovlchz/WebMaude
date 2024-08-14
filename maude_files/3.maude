@@ -37,10 +37,3 @@ begin proof PR.REV of REV
 qed
 
 *** ----------------------------------------------------------------------------
-show proof PR.REV 
-show proof PR.REV 
-show proof PR.DIST
-show proof PR.DIST
-show proof PR.DIST
-show proof PR.DIST
-show proof PR.DIST
