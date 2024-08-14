@@ -1,5 +1,6 @@
 # Use an appropriate base image
 FROM ubuntu:20.04
+ENV DEBIAN_FRONTEND=noninteractive 
 
 # Install necessary packages
 RUN apt-get update && apt-get install -y \
