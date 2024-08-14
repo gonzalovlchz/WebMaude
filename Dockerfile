@@ -15,7 +15,7 @@ WORKDIR /app
 COPY . /app
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Set the MAUDE_LIB environment variable
 # Adjust the paths to match where Maude and CITP are within /app
