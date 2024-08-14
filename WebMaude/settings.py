@@ -129,3 +129,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login'
+
+# settings.py
+MAUDE_FILES_DIR = os.path.join(BASE_DIR, 'maude_files')
+
+# settings.py
+MAUDE_EXECUTABLE_PATH = os.path.join(BASE_DIR, 'bin', 'Linux64', 'maude.linux64')
+
+# settings.py
+CITP_EXECUTABLE_PATH = os.path.join(BASE_DIR, 'bin', 'citp', 'src', 'run-citp')

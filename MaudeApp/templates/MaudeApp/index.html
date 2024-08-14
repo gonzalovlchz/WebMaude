@@ -88,6 +88,10 @@
         <div class="col-md-4 col-lg-3 left-panel">
             <div>
                 <h4>Sessions</h4>
+                <form method="post" action="chat/start_new_session">
+                    {% csrf_token %}
+                    <button type="submit">Nueva sesión</button>
+                </form>
                 <a href="#">CITP - Session 1</a>
                 <a href="#">CafeInMaude - Session 2</a>
                 <a href="#">CafeInMaude - Session 3</a>
@@ -132,9 +136,11 @@
                 </div>
             </div>
             <div class="chat-input">
-                <form action="#">
+                <form action="chat/get_execute_new_command" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="session" value="3">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Type a message...">
+                        <input type="text" name="command" class="form-control" value="show proof PR.REV " placeholder="Type a message...">
                         <button class="btn btn-primary" type="submit">Send</button>
                     </div>
                 </form>
