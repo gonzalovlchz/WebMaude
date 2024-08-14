@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive 
 
 # Install necessary packages
-RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -y \
+RUN apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -y \
     python3.12 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
