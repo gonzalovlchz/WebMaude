@@ -3,8 +3,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive 
 
 # Install necessary packages
-RUN apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -y \
-    python3.12 \
+RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -15,7 +14,7 @@ WORKDIR /app
 COPY . /app
 
 # Install Python dependencies
-RUN python -m pip install --no-cache-dir -r requirements.txt
+RUN python3.10 -m pip install --no-cache-dir -r requirements.txt
 
 # Set the MAUDE_LIB environment variable
 # Adjust the paths to match where Maude and CITP are within /app
