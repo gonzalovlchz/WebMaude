@@ -1,5 +1,5 @@
 # Use an appropriate base image
-FROM python3.12
+FROM python:3.12-alpine
 
 # Install necessary packages
 RUN apt-get update \
