@@ -95,7 +95,7 @@ def start_new_session(request):
 def executeMaudeCommand(previous_file, new_command):
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -no-banner -allow-files', encoding='utf-8')
     p.setecho(False)
-
+    p.delaybeforesend = None
     p.expect("Maude>")
     p.sendline("load ./bin/borrarluego/list \n")
     p.sendline(f"load {settings.CITP_EXECUTABLE_PATH} \n")
