@@ -1,6 +1,5 @@
-FROM ubuntu:latest
-RUN apt-get update -y
-RUN apt-get install -y python3.12 build-essential pipx
+FROM ubuntu:22.04
+RUN apt-get update; apt-get -y install python3.12 python3-pip python3.12-venv
 
 # Set the working directory
 WORKDIR /app
@@ -9,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install Python dependencies
-RUN pipx install --no-cache-dir -r requirements.txt
+RUN python3.12 -m venv .venv && /app/.venv/bin/python -m pip install --no-cache-dir -r requirements.txt
 
 # Set the MAUDE_LIB environment variable
 # Adjust the paths to match where Maude and CITP are within /app
