@@ -1,10 +1,6 @@
-# Use an appropriate base image
-FROM python:3.12-alpine
-
-# Install necessary packages
-RUN apt-get update \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Dockerfile-debian
+FROM debian:sid
+RUN apt update && apt install -y python3.12
 
 # Set the working directory
 WORKDIR /app
