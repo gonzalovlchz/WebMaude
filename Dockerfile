@@ -1,5 +1,5 @@
 # Use an appropriate base image
-FROM ubuntu:20.04
+FROM debian:stable
 ENV DEBIAN_FRONTEND=noninteractive 
 
 # Install necessary packages
