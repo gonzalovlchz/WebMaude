@@ -9,6 +9,7 @@ import os
 from ..models import Session, Command
 import pexpect
 import tempfile
+import json
 
 @login_required 
 def get_chat_session(request):
@@ -48,15 +49,28 @@ def get_all_sessions(request):
 
 def post_execute_new_command(request):
     if request.method == 'POST':
+        
         session_id = request.POST["session"]
         session = get_object_or_404(Session, id=session_id)
+        # Define the path to the .maude file for this session
+        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session_id}/{session_id}.maude")
+
+        if len(request.FILES) != 0:
+            file = request.FILES['file']
+            with open(maude_file_path, 'ab') as dest:
+                if file.multiple_chunks():
+                    for chunk in file.chunks():
+                        dest.write(chunk)
+                else:
+                    dest.write(file.read())
+
+        
         command_text = request.POST["command"]
 
         # Save the command to the database
         command = Command(session=session, input_text=command_text)
         command.save()
-        # Define the path to the .maude file for this session
-        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session_id}.maude")
+        
 
         response = executeMaudeCommand(maude_file_path, command_text)
 
@@ -79,10 +93,9 @@ def start_new_session(request):
         user = request.user
         session = Session.objects.create(user=user)
         # Obtener la ruta del archivo .maude
-        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}.maude")
+        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/{session.id}.maude")
         # Crear la carpeta si no existe
-        if not os.path.exists(settings.MAUDE_FILES_DIR):
-            os.makedirs(settings.MAUDE_FILES_DIR)
+        os.makedirs(os.path.dirname(maude_file_path), exist_ok=True)
         # Crear el archivo vacío
         with open(maude_file_path, 'w') as maude_file:
             pass  # Crear el archivo vacío

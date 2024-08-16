@@ -7,8 +7,8 @@
     <title>Chat Interpreter</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body,
-        html {
+        html,
+        body {
             height: 100%;
             margin: 0;
             display: flex;
@@ -16,9 +16,12 @@
         }
 
         .container-fluid {
-            padding: 0;
             flex: 1;
             display: flex;
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            /* Make the container fill the full height of the window */
         }
 
         .left-panel {
@@ -29,6 +32,31 @@
             flex-direction: column;
             justify-content: space-between;
             overflow-y: auto;
+        }
+
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+            padding: 20px;
+            height: 100%;
+            /* Ensures the chat panel fills the remaining height */
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            /* Allows the chat box to grow and fill the available space */
+            overflow-y: auto;
+            /* Allows scrolling when messages overflow */
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input {
+            margin-top: 15px;
         }
 
         .left-panel a {
@@ -45,27 +73,6 @@
             background-color: #6c757d;
         }
 
-        .chat-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: #f8f9fa;
-            padding: 20px;
-            max-height: 100vh;
-        }
-
-        .chat-box {
-            flex: 1;
-            overflow-y: scroll;
-            padding: 15px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .chat-input {
-            margin-top: 15px;
-        }
 
         .message {
             margin-bottom: 15px;
@@ -96,127 +103,127 @@
             font-size: 14px;
             color: #adb5bd;
         }
+        [v-cloak] { display: none; }
     </style>
 </head>
 
 <body>
-    <div class="container-fluid">
+    <div id="app" class="container-fluid" v-cloak>
         <div class="col-md-4 col-lg-3 left-panel">
             <div>
                 <h4>Sessions</h4>
-                <button class="btn btn-primary" id="btn_new_session">New</button>
+                <button class="btn btn-primary" @click="startNewSession">New</button>
                 <div id="div_session_list">
+                    <a href="#" v-for="session in sessions" :key="session.id" :id="['Row_' + session.id]"
+                        @click="showChatSession(session.id)" class="a_session_list">
+                        {% verbatim %}{{ session.id }}{% endverbatim %}
+                    </a>
                 </div>
             </div>
             <div class="user-info">
                 <p>Logged in as:</p>
-                <strong>{{ user.username }}</strong>
+                <strong>{{ user }}</strong>
                 <a href="/acl/logout" class="btn btn-sm btn-danger mt-2">Logout</a>
             </div>
         </div>
         <div class="col-md-8 col-lg-9 chat-panel" id="div_chat_panel">
-            <!--<div class="chat-box">
-                
-                <div class="message user">
-                    <strong>User:</strong> What is the result of 2 + 2 in Maude?
-                </div>
-                <div class="message maude">
-                    <strong>Maude:</strong> Maude> 4
-                </div>
-
-                <div class="message user">
-                    <strong>User:</strong> Can you show me an example of a rewrite rule?
-                </div>
-                <div class="message maude">
-                    <strong>Maude:</strong> Sure! Here is a simple rewrite rule:<br><br>
-                    ```<br>
-                    eq (X + 0) = X .<br>
-                    eq (0 + X) = X .<br>
-                    ```
-                </div>
-
-                <div class="message user">
-                    <strong>User:</strong> What about a conditional rule?
-                </div>
-                <div class="message maude">
-                    <strong>Maude:</strong> Here’s an example of a conditional rule:<br><br>
-                    ```<br>
-                    crl [rule] : X + Y => Z if X == 0 .<br>
-                    ```
-                </div>
-            </div>
-            <div class="chat-input">
-                <form action="chat/post_execute_new_command" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="session" value="3">
-                    <div class="input-group">
-                        <input type="text" name="command" class="form-control" value="show proof PR.REV " placeholder="Type a message...">
-                        <button class="btn btn-primary" type="submit">Send</button>
+            <div v-if="currentSession" class="d-flex flex-column h-100">
+                <div class="chat-box flex-grow-1 overflow-auto" id="div_chat_box">
+                    <div v-for="command in commands" :key="command.input_text">
+                        <div class="message user" v-html="command.input_text"></div>
+                        <div class="message maude" v-html="command.output_text"></div>
                     </div>
-                </form>
+                </div>
+                <div class="chat-input">
+                    <div class="input-group">
+                        <input type="file" id="input_chat_file" class="form-control">
+                        <input type="text" v-model="newCommand" class="form-control" placeholder="Type a message...">
+                        <button class="btn btn-primary" @click="sendCommand">Send</button>
+                    </div>
+                </div>
             </div>
-        -->
         </div>
+
     </div>
 
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            $.getJSON("/chat/get_all_sessions").done(function (data) {
-                console.log(data);
-                data.sessions.forEach(s => {
-                    $("#div_session_list").append("<a href='#' data-id=" + s["id"] + " class='a_session_list'>" + s["created_at"] + "</a>");
-                });
-                $(".a_session_list").click(function () {
-                    show_chat_session($(this).data("id"));
-                });
-            });
-            $("#btn_new_session").click(function () {
-                $.ajax({
-                    url: "/chat/start_new_session",
-                    method: "POST",
-                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                    data: [],
-                    dataType: "json"
-                }).done(function () {
-                    location.reload();
-                })
-            });
+        const { createApp } = Vue;
 
-
-        });
-        function show_chat_session(session_id) {
-            $("#div_chat_panel").empty();
-            $.getJSON("/chat/get_chat_session?session=" + session_id).done(function (data) {
-                console.log(data);
-                $("#div_chat_panel").html('<div class="chat-box" id="div_chat_box"></div><div class="chat-input"><div class="input-group"><input type="text" id="input_command" class="form-control" value="show proof PR.REV " placeholder="Type a message..."><button class="btn btn-primary" id="btn_send_command" data-session-id="' + session_id + '">Send</button></div></div>');
-                data.commands.forEach(c => {
-                    $("#div_chat_box").append('<div class="message user">' + c["input_text"] + '</div><div class="message maude">' + c["output_text"] + '</div>')
-                });
-
-                $("#btn_send_command").click(function () {
-                    $("#div_chat_box").append('<div class="message user">' + $("#input_command").val() + '</div>')
-                    $.ajax({
-                        url: "/chat/post_execute_new_command",
+        const app = createApp({
+            data() {
+                return {
+                    sessions: [],
+                    commands: [],
+                    currentSession: null,
+                    newCommand: '',
+                    user: '{{ user.username }}'
+                };
+            },
+            mounted() {
+                this.getAllSessions();
+            },
+            methods: {
+                getAllSessions() {
+                    fetch("/chat/get_all_sessions")
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Original data from server:", data); // Log the raw data
+                            this.sessions = data.sessions;
+                        });
+                },
+                showChatSession(sessionId) {
+                    this.currentSession = sessionId;
+                    this.commands = [];
+                    fetch(`/chat/get_chat_session?session=${sessionId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.commands = data.commands;
+                        });
+                },
+                startNewSession() {
+                    fetch("/chat/start_new_session", {
                         method: "POST",
                         headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                        data: {
-                            "session": $(this).data("session-id"),
-                            "command": $("#input_command").val()
+                    }).then(() => {
+                        this.getAllSessions();
+                    });
+                },
+                sendCommand() {
+                    if (this.newCommand.trim() === '') return;
+                    const commandText = this.newCommand.trim();
+                    this.commands.push({ input_text: commandText, output_text: 'Sending...' });
+                    this.newCommand = '';
+
+                    var chatFile = document.getElementById("input_chat_file");
+                    var data = new FormData();
+                    data.append('file', chatFile.files[0]);
+                    data.append('session', this.currentSession);
+                    data.append("command", commandText);
+
+
+                    fetch("/chat/post_execute_new_command", {
+                        method: "POST",
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
                         },
-                        dataType: "json"
-                    }).done(function (data) {
-                        $("#div_chat_box").append('<div class="message maude">' + data.output + '</div>')
-                        $("#div_chat_box").animate({ scrollTop: $('#div_chat_box').prop("scrollHeight")}, 1000);
-                        $("#input_command").val("");
+                        body: data,
                     })
-                });
-            });
-        }
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);
+                            this.commands[this.commands.length - 1].output_text = data.output;
+                            this.$nextTick(() => {
+                                const chatBox = document.getElementById('div_chat_box');
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            });
+                        });
+                }
+            }
+        });
+
+        app.mount('#app');
     </script>
-
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
-        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-
 </body>
 
 </html>
