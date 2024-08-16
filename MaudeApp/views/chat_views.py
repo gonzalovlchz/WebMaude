@@ -52,11 +52,11 @@ def post_execute_new_command(request):
         
         session_id = request.POST["session"]
         session = get_object_or_404(Session, id=session_id)
+
         # Define the path to the .maude file for this session
         maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session_id}/{session_id}.maude")
-
-        if len(request.FILES) != 0:
-            file = request.FILES['file']
+        
+        for file in request.FILES.getlist('file[]'):
             with open(maude_file_path, 'ab') as dest:
                 if file.multiple_chunks():
                     for chunk in file.chunks():
@@ -67,12 +67,15 @@ def post_execute_new_command(request):
         
         command_text = request.POST["command"]
 
+
         # Save the command to the database
         command = Command(session=session, input_text=command_text)
         command.save()
         
+        # Define the path to the .maude file for this session
+        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous.maude")
 
-        response = executeMaudeCommand(maude_file_path, command_text)
+        response = executeCITPCommand(maude_previous_file_path, maude_file_path, command_text)
 
         command.output_text = response
         command.save()
@@ -100,25 +103,40 @@ def start_new_session(request):
         with open(maude_file_path, 'w') as maude_file:
             pass  # Crear el archivo vacío
 
+        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous.maude")
+        # Crear el archivo vacío
+        with open(maude_previous_file_path, 'w') as maude_file:
+            pass  # Crear el archivo vacío
+
+        for file in request.FILES.getlist('file[]'):
+            with open(maude_previous_file_path, 'ab') as dest:
+                if file.multiple_chunks():
+                    for chunk in file.chunks():
+                        dest.write(chunk)
+                else:
+                    dest.write(file.read())
+
         # Continuar con el resto de la lógica
         return JsonResponse({
         "session_id": session.id
         })
 
-def executeMaudeCommand(previous_file, new_command):
+def executeCITPCommand(previous_maude_file, previous_citp_file, new_command):
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -no-banner -allow-files', encoding='utf-8')
     p.setecho(False)
     p.delaybeforesend = None
     p.expect("Maude>")
-    p.sendline("load ./bin/borrarluego/list \n")
+    p.sendline(f"load {previous_maude_file} \n")
     p.sendline(f"load {settings.CITP_EXECUTABLE_PATH} \n")
-    p.expect("CITP >")
-    p.sendline(f"load {previous_file} \n")
-    p.expect("CITP >")
+    # Regular expression to match the three patterns
+    citp_pattern = r'CITP(?:/[^ ]*)? >'
+    p.expect(citp_pattern)
+    p.sendline(f"load {previous_citp_file} \n")
+    p.expect(citp_pattern)
 
     p.sendline(new_command)
 
-    p.expect("CITP >")
+    p.expect(citp_pattern)
     output = p.before.strip()
     print(output)
     # Remove the command from the output
