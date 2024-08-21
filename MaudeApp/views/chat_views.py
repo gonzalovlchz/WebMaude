@@ -38,7 +38,7 @@ def get_chat_session(request):
 def get_all_sessions(request):
     if request.method == 'GET':
         # Get all sessions for the current user
-        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at', 'file_path')
+        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at')
 
         # Convert the queryset to a list to return as JSON
         sessions_list = list(sessions)
@@ -65,29 +65,36 @@ def post_execute_new_command(request):
                     dest.write(file.read())
 
         
-        command_text = request.POST["command"]
+        if 'command' in request.POST:
+            command_text = request.POST["command"]
 
-
-        # Save the command to the database
-        command = Command(session=session, input_text=command_text)
-        command.save()
+            # Save the command to the database
+            command = Command(session=session, input_text=command_text)
+            command.save()
         
-        # Define the path to the .maude file for this session
-        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous.maude")
+            # Define the path to the .maude file for this session
+            maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous.maude")
 
-        response = executeCITPCommand(maude_previous_file_path, maude_file_path, command_text)
+            side_command = ""
+            if 'side_command' in request.POST:
+                side_command = request.POST["side_command"]
 
-        command.output_text = response
-        command.save()
-        
-        # Append the new command to the .maude file
-        with open(maude_file_path, 'a') as maude_file:
-            maude_file.write(command_text + '\n')
+            output, side_command_output = executeCITPCommand(maude_previous_file_path, maude_file_path, command_text, side_command)
 
-        conv = Ansi2HTMLConverter()
-        return JsonResponse({
-        "output": conv.convert(response)
-        })
+            command.output_text = output
+            command.save()
+            
+            # Append the new command to the .maude file
+            with open(maude_file_path, 'a') as maude_file:
+                maude_file.write(command_text + '\n')
+
+            conv = Ansi2HTMLConverter()
+            return JsonResponse({
+            "output": conv.convert(output),
+            "side_command_output": conv.convert(side_command_output),
+            })
+        else:
+            return True
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 # Additional views for session management
@@ -121,7 +128,7 @@ def start_new_session(request):
         "session_id": session.id
         })
 
-def executeCITPCommand(previous_maude_file, previous_citp_file, new_command):
+def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, side_command=""):
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -no-banner -allow-files', encoding='utf-8')
     p.setecho(False)
     p.delaybeforesend = None
@@ -131,15 +138,20 @@ def executeCITPCommand(previous_maude_file, previous_citp_file, new_command):
     # Regular expression to match the three patterns
     citp_pattern = r'CITP(?:/[^ ]*)? >'
     p.expect(citp_pattern)
-    p.sendline(f"load {previous_citp_file} \n")
+    p.sendline(f"load {previous_citp_file}")
     p.expect(citp_pattern)
 
-    p.sendline(new_command)
+    output_side = ""
+    if side_command!="":
+        p.sendline(side_command)    
+        p.expect(citp_pattern)
+        output_side = p.before.strip()
 
+    p.sendline(new_command)
     p.expect(citp_pattern)
     output = p.before.strip()
     print(output)
     # Remove the command from the output
-    if output.startswith("> "+new_command):
-        output = output[len("> "+new_command):].lstrip()
-    return output
+    if output.startswith(new_command):
+        output = output[len(new_command):].lstrip()
+    return output, output_side

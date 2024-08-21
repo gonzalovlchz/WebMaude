@@ -30,14 +30,35 @@
         }
 
         .left-panel-content {
-            flex: 1; /* Allow this section to expand */
-            overflow-y: auto; /* Enable vertical scrolling */
+            flex: 1;
+            /* Allow this section to expand */
+            overflow-y: auto;
+            /* Enable vertical scrolling */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            background-color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .right-panel-content {
+            flex: 1;
+            /* Allow this section to expand */
+            overflow-y: auto;
+            /* Enable vertical scrolling */
             display: flex;
             flex-direction: column;
         }
 
         #div_session_list {
-            overflow-y: auto; /* Ensure this list scrolls */
+            overflow-y: auto;
+            /* Ensure this list scrolls */
         }
 
         .chat-panel {
@@ -80,7 +101,6 @@
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 5px;
-            max-width: 80%;
         }
 
         .message.user {
@@ -114,7 +134,7 @@
 
 <body>
     <div id="app" class="container-fluid" v-cloak>
-        <div class="col-md-4 col-lg-3 left-panel">
+        <div class="col-md-3 left-panel">
             <div class="left-panel-content">
                 <div class="clearfix mb-3">
                     <button class="btn btn-primary float-end" @click="modalStartNewSession">New</button>
@@ -123,7 +143,7 @@
                 <div id="div_session_list">
                     <a href="#" v-for="session in sessions" :key="session.id" :id="['Row_' + session.id]"
                         @click="showChatSession(session.id)" class="a_session_list">
-                        {% verbatim %}{{ session.id }}{% endverbatim %}
+                        CITP - {% verbatim %}{{ session.id }}{% endverbatim %}
                     </a>
                 </div>
             </div>
@@ -133,7 +153,7 @@
                 <a href="/acl/logout" class="btn btn-sm btn-danger mt-2">Logout</a>
             </div>
         </div>
-        <div class="col-md-8 col-lg-9 chat-panel" id="div_chat_panel">
+        <div class="col-md-6 chat-panel" id="div_chat_panel">
             <div v-if="currentSession" class="d-flex flex-column h-100">
                 <div class="chat-box flex-grow-1 overflow-auto" id="div_chat_box">
                     <div v-for="command in commands" :key="command.input_text">
@@ -151,9 +171,37 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-3 right-panel">
+            <div class="right-panel-content">
+                <div class="clearfix mb-3">
+                    <h4>State</h4>
+                    <div class="">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'list goals'"
+                                id="input_side_command_radio1" checked>
+                            <label class="form-check-label" for="input_side_command_radio1">
+                                list goals
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'list proofs'"
+                                id="input_side_command_radio2">
+                            <label class="form-check-label" for="input_side_command_radio2">
+                                list proofs
+                            </label>
+                        </div>
+                    </div>
+
+                    <div v-html="side_command_output" class="message maude"></div>
+                </div>
+
+            </div>
+
+        </div>
 
         <!-- Modal -->
-        <div class="modal fade" id="modal_new_session" tabindex="-1" aria-labelledby="modal_label_new_session" aria-hidden="true">
+        <div class="modal fade" id="modal_new_session" tabindex="-1" aria-labelledby="modal_label_new_session"
+            aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -188,6 +236,8 @@
                     sessions: [],
                     commands: [],
                     currentSession: null,
+                    side_command: null,
+                    side_command_output: null,
                     newCommand: '',
                     user: '{{ user.username }}',
                     modal_new_session: null,
@@ -197,7 +247,7 @@
                 this.getAllSessions();
             },
             watch: {
-                currentSession: function(val) {
+                currentSession: function (val) {
                     this.commands = [];
                     fetch(`/chat/get_chat_session?session=${val}`)
                         .then(response => response.json())
@@ -224,38 +274,48 @@
                 },
                 startNewSession() {
                     var data = new FormData();
-                    
+
                     var sessionFile = document.getElementById("input_new_session_file");
                     for (const file of sessionFile.files) {
                         data.append('file[]', file, file.name);
                     }
-                    
+
                     fetch("/chat/start_new_session", {
                         method: "POST",
                         headers: { 'X-CSRFToken': '{{ csrf_token }}' },
                         body: data,
                     }).then(response => response.json())
-                    .then(data => {
-                        this.getAllSessions();
-                        this.modal_new_session.hide();
-                        sessionFile.value = null;
-                        this.currentSession = data.session_id;
-                    });
+                        .then(data => {
+                            this.getAllSessions();
+                            this.modal_new_session.hide();
+                            sessionFile.value = null;
+                            this.currentSession = data.session_id;
+                        });
                 },
                 sendCommand() {
-                    if (this.newCommand.trim() === '') return;
-                    const commandText = this.newCommand.trim();
-                    this.commands.push({ input_text: commandText, output_text: 'Sending...' });
-                    this.newCommand = '';
+
+                    var chatFile = document.getElementById("input_chat_file");
+
+                    if (this.newCommand.trim() === '' && chatFile.files.length == 0) return;
 
                     var data = new FormData();
-                    
-                    var chatFile = document.getElementById("input_chat_file");
+
                     for (const file of chatFile.files) {
                         data.append('file[]', file, file.name);
                     }
+                    document.getElementById("input_chat_file").value = null;
+
+                    if (this.newCommand.trim() !== '') {
+                        const commandText = this.newCommand.trim();
+                        this.commands.push({ input_text: commandText, output_text: 'Sending...' });
+                        this.newCommand = '';
+
+                        data.append("command", commandText);
+                    }
+
+                    data.append("side_command", this.side_command);
+
                     data.append('session', this.currentSession);
-                    data.append("command", commandText);
 
                     fetch("/chat/post_execute_new_command", {
                         method: "POST",
@@ -264,16 +324,20 @@
                         },
                         body: data,
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("input_chat_file").value = null;
-                        console.log(data);
-                        this.commands[this.commands.length - 1].output_text = data.output;
-                        this.$nextTick(() => {
-                            const chatBox = document.getElementById('div_chat_box');
-                            chatBox.scrollTop = chatBox.scrollHeight;
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);
+                            if (data.output.trim() !== "") {
+                                this.commands[this.commands.length - 1].output_text = data.output;
+                            }
+                            if (data.side_command_output.trim() !== "") {
+                                this.side_command_output = data.side_command_output;
+                            }
+                            this.$nextTick(() => {
+                                const chatBox = document.getElementById('div_chat_box');
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            });
                         });
-                    });
                 }
             }
         });

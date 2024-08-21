@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Session, Command, File
+from .models import Session, Command
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
@@ -10,8 +10,3 @@ class SessionAdmin(admin.ModelAdmin):
 class CommandAdmin(admin.ModelAdmin):
     list_display = ('id', 'session', 'input_text', 'output_text', 'timestamp')
     search_fields = ('session__id', 'input_text')
-
-@admin.register(File)
-class FileAdmin(admin.ModelAdmin):
-    list_display = ('session', 'file_path')
-    search_fields = ('session__id',)

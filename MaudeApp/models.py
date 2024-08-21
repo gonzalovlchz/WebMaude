@@ -5,7 +5,6 @@ class Session(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link to the user who created the session
     created_at = models.DateTimeField(auto_now_add=True)       # Timestamp when the session was created
     updated_at = models.DateTimeField(auto_now=True)           # Timestamp when the session was last updated
-    file_path = models.CharField(max_length=255, blank=True, null=True)  # Path to the .maude file (optional)
 
     def __str__(self):
         return f"Session {self.id} for {self.user.username}"
@@ -18,10 +17,3 @@ class Command(models.Model):
 
     def __str__(self):
         return f"Command {self.id} in session {self.session.id}"
-
-class File(models.Model):
-    session = models.OneToOneField(Session, on_delete=models.CASCADE)
-    file_path = models.CharField(max_length=255)  # Path to the .maude file used for the session
-
-    def __str__(self):
-        return f"File for session {self.session.id}"
