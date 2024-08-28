@@ -18,7 +18,7 @@ RUN python3.12 -m venv .venv && /app/.venv/bin/python -m pip install --no-cache-
 
 # Set the MAUDE_LIB environment variable
 # Adjust the paths to match where Maude and CITP are within /app
-ENV MAUDE_LIB=/app/bin/Linux64:/app/bin/citp/src
+ENV MAUDE_LIB=/app/bin/Linux64:/app/bin/citp/src:/app/bin/cafeInMaude/src
 
 # Copy the entrypoint script and set executable permissions
 COPY entrypoint.bash /app/entrypoint.bash
