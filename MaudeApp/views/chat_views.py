@@ -115,17 +115,15 @@ def start_new_session(request):
         user = request.user
         session_type = request.POST.get("sessionType", "cafeInMaude")
         session = Session.objects.create(user=user, session_type=session_type)
-        # Definir la extensión de archivo basada en el tipo de sesión
-        file_extension = ".cafe" if session_type == "cafeInMaude" else ".maude"
         # Obtener la ruta del archivo .maude
-        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/{session.id}{file_extension}")
+        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/{session.id}")
         # Crear la carpeta si no existe
         os.makedirs(os.path.dirname(maude_file_path), exist_ok=True)
         # Crear el archivo vacío
         with open(maude_file_path, 'w') as maude_file:
             pass  # Crear el archivo vacío
 
-        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous{file_extension}")
+        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous")
         # Crear el archivo vacío
         with open(maude_previous_file_path, 'w') as maude_file:
             pass  # Crear el archivo vacío
