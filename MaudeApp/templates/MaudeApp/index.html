@@ -162,8 +162,23 @@
                     </div>
                 </div>
                 <div class="chat-input">
-                    <div class="input-group">
-                        <span class="input-group-text">CITP file(s):</span>
+                    <div class="input-group" id="inputGroup">
+                        <span v-if="sessionType === 'cafeInMaude'" class="input-group-text">CafeInMaude file(s):</span>
+                        <span v-else class="input-group-text">CITP file(s):</span>
+
+                        <select v-if="sessionType === 'cafeInMaude'" v-model="cafeInMaudeOption" class="form-select">
+                            <option value="examples">Examples</option>
+                            <option value="2p-mutex">2p-mutex</option>
+                            <option value="abp">ABP</option>
+                            <option value="cloud">Cloud</option>
+                            <option value="mcs">MCS</option>
+                            <option value="nslpk">NSLPK</option>
+                            <option value="nslpk2">NSLPK2</option>
+                            <option value="qlock">Qlock</option>
+                            <option value="scp">SCP</option>
+                            <option value="tas">TAS</option>
+                        </select>
+
                         <input type="file" multiple id="input_chat_file" class="form-control">
                         <input type="text" v-model="newCommand" class="form-control" placeholder="Type a command...">
                         <button class="btn btn-primary" @click="sendCommand">Send</button>
@@ -211,8 +226,17 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col">
-                                Maude file(s) to be imported before CITP:
-                                <input type="file" id="input_new_session_file" class="form-control" multiple>
+                                <label for="sessionType">Select Session Type:</label>
+                                <select id="sessionType" class="form-select" v-model="sessionType">
+                                    <option value="cafeInMaude">CafeInMaude</option>
+                                    <option value="CITP">CITP</option>
+                                </select>
+                                <div id="sessionInputContainer" v-if="sessionType === 'CITP'">
+                                    <div>
+                                        Maude file(s) to be imported before CITP:
+                                    </div>
+                                    <input type="file" id="input_new_session_file" class="form-control" multiple>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -241,6 +265,8 @@
                     newCommand: '',
                     user: '{{ user.username }}',
                     modal_new_session: null,
+                    sessionType: 'cafeInMaude',
+                    cafeInMaudeOption: 'examples'
                 };
             },
             mounted() {
@@ -275,10 +301,19 @@
                 startNewSession() {
                     var data = new FormData();
 
-                    var sessionFile = document.getElementById("input_new_session_file");
-                    for (const file of sessionFile.files) {
-                        data.append('file[]', file, file.name);
+                    // Solo agregar archivos si sessionType es CITP
+                    if (this.sessionType === 'CITP') {
+                        var sessionFile = document.getElementById("input_new_session_file");
+                        for (const file of sessionFile.files) {
+                            data.append('file[]', file, file.name);
+                        }
+                    }else {
+                        // Si es CafeInMaude, aún así agregamos 'file[]' vacío
+                        data.append('file[]', new Blob(), '');
                     }
+
+                    // Agregar el tipo de sesión al form data
+                    data.append("sessionType", this.sessionType);
 
                     fetch("/chat/start_new_session", {
                         method: "POST",
@@ -294,28 +329,25 @@
                 },
                 sendCommand() {
 
-                    var chatFile = document.getElementById("input_chat_file");
-
-                    if (this.newCommand.trim() === '' && chatFile.files.length == 0) return;
+                    if (this.newCommand.trim() === '') return;
+                    const commandText = this.newCommand.trim();
+                    this.commands.push({ input_text: commandText, output_text: 'Sending...' });
+                    this.newCommand = '';
 
                     var data = new FormData();
-
+                    
+                    var chatFile = document.getElementById("input_chat_file");
                     for (const file of chatFile.files) {
                         data.append('file[]', file, file.name);
                     }
-                    document.getElementById("input_chat_file").value = null;
 
-                    if (this.newCommand.trim() !== '') {
-                        const commandText = this.newCommand.trim();
-                        this.commands.push({ input_text: commandText, output_text: 'Sending...' });
-                        this.newCommand = '';
-
-                        data.append("command", commandText);
+                    // Agrega la opción de CafeInMaude si está seleccionada
+                    if (this.sessionType === 'cafeInMaude') {
+                        data.append('cafeInMaudeOption', this.cafeInMaudeOption);
                     }
 
-                    data.append("side_command", this.side_command);
-
                     data.append('session', this.currentSession);
+                    data.append("command", commandText);
 
                     fetch("/chat/post_execute_new_command", {
                         method: "POST",

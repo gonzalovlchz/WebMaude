@@ -147,3 +147,9 @@ MAUDE_EXECUTABLE_PATH = os.path.join(BASE_DIR, 'bin', 'Linux64', 'maude.linux64'
 
 # settings.py
 CITP_EXECUTABLE_PATH = os.path.join(BASE_DIR, 'bin', 'citp', 'src', 'run-citp')
+
+#settings.py
+CAFE_EXECUTABLE_PATH = os.path.join(BASE_DIR, 'bin', 'cafeInMaude', 'src', 'cafeInMaude')
+
+#settings.py
+DEFAULT_TIMEOUT = 30
