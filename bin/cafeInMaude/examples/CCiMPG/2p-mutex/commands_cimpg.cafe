@@ -1,0 +1,19 @@
+load ../examples/CCiMPG/2p-mutex/2p-mutex.cafe .
+load ../examples/CCiMPG/2p-mutex/all_proofs.cafe .
+
+set-cores 4 .
+
+set-output ../examples/CCiMPG/2p-mutex/2p-proof.cafe .
+
+eof
+
+:infer-proof inv1 .
+
+:save-proof .
+
+-- For loading the generated proof
+load ../examples/CCiMPG/2p-mutex/2p-proof.cafe .
+
+eof
+-- For loading this file
+load ../examples/CCiMPG/2p-mutex/commands_cimpg.cafe .

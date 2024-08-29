@@ -153,3 +153,7 @@ CAFE_EXECUTABLE_PATH = os.path.join(BASE_DIR, 'bin', 'cafeInMaude', 'src', 'cafe
 
 #settings.py
 DEFAULT_TIMEOUT = 30
+
+# Directory where uploaded files are stored
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'  # URL to access media files in development

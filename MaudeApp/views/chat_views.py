@@ -6,7 +6,7 @@ from django.views.generic import ListView, DetailView, CreateView
 from django.conf import settings
 from ansi2html import Ansi2HTMLConverter
 import os
-from ..models import Session, Command
+from ..models import Session, Command, ExampleFile
 import pexpect
 import tempfile
 import json
@@ -31,21 +31,36 @@ def get_chat_session(request):
             for command in commands
         ]
 
-        return JsonResponse({"commands": commands_list})
+        return JsonResponse({"commands": commands_list, "sessionType": session.session_type})
 
 
 @login_required    
 def get_all_sessions(request):
     if request.method == 'GET':
         # Get all sessions for the current user
-        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at')
+        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at', 'session_type')
 
         # Convert the queryset to a list to return as JSON
         sessions_list = list(sessions)
 
         return JsonResponse({'sessions': sessions_list})
 
+@login_required
+def get_files_by_session_type(request):
+    if request.method == 'GET':
+        # Get the session_type from the query parameters
+        session_type = request.GET.get('session_type', None)
+        
+        if not session_type:
+            return JsonResponse({'error': 'session_type parameter is required'}, status=400)
 
+        # Filter ExampleFile objects by session_type
+        example_files = ExampleFile.objects.filter(session_type=session_type).values('id', 'name', 'maude', 'program', 'session_type')
+
+        # Convert the queryset to a list to return as JSON
+        example_files_list = list(example_files)
+
+        return JsonResponse({'example_files': example_files_list})
 
 def post_execute_new_command(request):
     if request.method == 'POST':
@@ -53,9 +68,38 @@ def post_execute_new_command(request):
         session_id = request.POST["session"]
         session = get_object_or_404(Session, id=session_id)
 
+        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous")
+
         # Define the path to the .maude file for this session
         maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session_id}/{session_id}")
-        
+
+        if 'exampleFile' in request.POST:
+            example_file_name = request.POST.get('exampleFile', None)
+            # Query the File model to find the file by name
+            file_entry = ExampleFile.objects.filter(name=example_file_name).first()
+            if not file_entry:
+                return JsonResponse({'error': 'File not found'}, status=404)
+            # Retrieve file paths and read file contents
+
+            if file_entry.maude:
+                maude_content = file_entry.maude.read()
+                # Append the contents to the target file
+                try:
+                    with open(maude_previous_file_path, 'ab') as dest_file:
+                        dest_file.write(maude_content)
+                except IOError as e:
+                    return JsonResponse({'error': f'Error writing to target file: {str(e)}'}, status=500)
+                
+            if file_entry.program:
+                program_content = file_entry.program.read()
+                # Append the contents to the target file
+                try:
+                    with open(maude_file_path, 'ab') as dest_file:
+                        dest_file.write(program_content)
+                except IOError as e:
+                    return JsonResponse({'error': f'Error writing to target file: {str(e)}'}, status=500)
+
+    
         for file in request.FILES.getlist('file[]'):
             with open(maude_file_path, 'ab') as dest:
                 if file.multiple_chunks():
@@ -71,18 +115,9 @@ def post_execute_new_command(request):
             # Save the command to the database
             command = Command(session=session, input_text=command_text)
             command.save()
-        
-            # Define the path to the .maude file for this session
-            if session.session_type == "cafeInMaude":
-                cafe_in_maude_option = request.POST.get("cafeInMaudeOption")
-                if cafe_in_maude_option is not "examples":
-                        maude_previous_file_path = cafe_in_maude_option
-                else:
-                    maude_previous_file_path = None
-            else:
-                maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous")
 
             # Execute command based on session type
+            side_command_output=""
             if session.session_type == 'CITP':
                 side_command = ""
                 if 'side_command' in request.POST:
@@ -138,7 +173,7 @@ def start_new_session(request):
 
         # Continuar con el resto de la lógica
         return JsonResponse({
-        "session_id": session.id
+        "session_id": session.id,
         })
 
 def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, side_command=""):
@@ -169,7 +204,7 @@ def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, sid
         output = output[len(new_command):].lstrip()
     return output, output_side
 
-def executeCafeInMaudeCommand(previous_maude_file, maude_file_path, new_command, timeout=None):
+def executeCafeInMaudeCommand(previous_maude_file, program_file_path, new_command, timeout=None):
     print("Estoy para mandar el comando de cafe")
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -allow-files {settings.CAFE_EXECUTABLE_PATH}', encoding='utf-8')
     p.setecho(False)
@@ -179,36 +214,21 @@ def executeCafeInMaudeCommand(previous_maude_file, maude_file_path, new_command,
     # Tiempo de espera predeterminado si no se proporciona uno
     if timeout is None:
         timeout = settings.DEFAULT_TIMEOUT
-
+    print("pex0")
     try:
-        if previous_maude_file is not None:
-            # Mapeo de archivos a sus rutas
-            file_paths = {
-                "2p-mutex": "../examples/CCiMPG/2p-mutex/2p-mutex.cafe",
-                "abp": "../examples/CCiMPG/ABP/abp.cafe",
-                "cloud": "../examples/CCiMPG/Cloud/cloud.cafe",
-                "mcs": "../examples/CCiMPG/MCS/mcs.cafe",
-                "nslp": "../examples/CCiMPG/NSLP/nslpk.cafe",
-                "nslpk2": "../examples/CCiMPG/NSLPK2/nslpk2.cafe",
-                "qlock": "../examples/CCiMPG/Qlock/qlock.cafe",
-                "scp": "../examples/CCiMPG/SCP/scp.cafe",
-                "tas": "../examples/CCiMPG/TAS/tas.cafe"
-            }
-            # Obtener la ruta del archivo basado en el valor de previous_maude_file
-            file_path = file_paths.get(previous_maude_file)
-
-            # Si existe una ruta para ese archivo, enviar el comando
-            if file_path:
-                p.sendline(f"load {file_path} .")
-
+        print("pex2")
+        p.sendline(f"load {program_file_path} .")
+        print("pex3")
         p.expect("CafeInMaude>", timeout=timeout)
-        p.sendline(f"load {maude_file_path} .")
-        p.expect("CafeInMaude>", timeout=timeout)
-        aux = p.before.strip()
+        print("pex4")
         p.sendline(new_command)
+        print("pex5")
         p.expect("CafeInMaude>", timeout=timeout)
-        output = aux + p.before.strip()
+        print("pex6")
+        output = p.before.strip()
+        print("pex7")
         print(output)
+        print("pex8")
         # Remove the command from the output
         if output.startswith("> "+new_command):
             output = output[len("> "+new_command):].lstrip()

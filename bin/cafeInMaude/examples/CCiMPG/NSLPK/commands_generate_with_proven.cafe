@@ -1,0 +1,76 @@
+load ../examples/CCiMPG/NSLPK/nslpk.cafe .
+
+set-cores 4 .
+
+-- Introduce commands indicated below depending on the invariant you want to prove
+
+open NSLPK .
+  :id(proofNSLPK)
+
+  ops n1 n2 : -> Nonce .
+  op  q : -> Prin .
+
+  red inv3(S:Sys, n1, n2, q) .
+close
+
+-- end commands
+
+:infer-proof proofNSLPK .
+
+-- Introduce the path of the file you want to create.
+
+set-output ../examples/CCiMPG/NSLPK/nslpk-proof-generate_inv3.cafe .
+
+:save-proof .
+
+eof
+
+-- inv1
+
+:proven(inv2(S:Sys, N1:Nonce, Q:Prin))
+:proven(inv3(S:Sys, N1:Nonce, N2:Nonce, Q:Prin))
+
+open NSLPK .
+  :id(proofNSLPK)
+
+  ops n1 n2 : -> Nonce .
+  op  q : -> Prin .
+
+  red inv1(S:Sys, n1) .
+close
+
+-- end inv1
+
+-- inv2
+
+open NSLPK .
+  :id(proofNSLPK)
+
+  ops n1 n2 : -> Nonce .
+  op  q : -> Prin .
+
+  red inv2(S:Sys, n1, q) .
+close
+
+-- end inv2
+
+-- inv3
+
+open NSLPK .
+  :id(proofNSLPK)
+
+  ops n1 n2 : -> Nonce .
+  op  q : -> Prin .
+
+  red inv3(S:Sys, n1, n2, q) .
+close
+
+-- end inv3
+
+-- For loading this file
+load ../examples/CCiMPG/NSLPK/commands_generate_with_proven.cafe .
+
+Suggested configuration:
+  eq backtrackLevels = 6 .
+  eq numInstVars = 2 .
+  eq extraImpLevels = 1 .

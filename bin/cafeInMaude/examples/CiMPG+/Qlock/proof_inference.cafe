@@ -1,0 +1,18 @@
+open QLOCK .
+  :id(qlock)
+
+  ops i j k : -> Pid .
+
+  red inv1(S:Sys, i, j) .
+  red inv2(S:Sys, k) .
+close
+
+open QLOCK .
+  :infer(qlock)
+close
+
+***(Recommended configuration
+  eq backtrackLevels = 5 .
+  eq numInstVars = 1 .
+  eq extraImpLevels = 0 .
+)
