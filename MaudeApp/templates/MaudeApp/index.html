@@ -182,9 +182,10 @@
                 <div class="clearfix mb-3">
                     <h4>State</h4>
                     <div class="">
+                        <h5>System-level</h5>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" v-model="side_command" :value="'list goals'"
-                                id="input_side_command_radio1" checked>
+                                id="input_side_command_radio1" >
                             <label class="form-check-label" for="input_side_command_radio1">
                                 list goals
                             </label>
@@ -194,6 +195,51 @@
                                 id="input_side_command_radio2">
                             <label class="form-check-label" for="input_side_command_radio2">
                                 list proofs
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show goals'"
+                                id="input_side_command_radio3">
+                            <label class="form-check-label" for="input_side_command_radio3">
+                                show goals
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show proofs'"
+                                id="input_side_command_radio4">
+                            <label class="form-check-label" for="input_side_command_radio4">
+                                show proofs
+                            </label>
+                        </div>
+                    </div>
+                    <div class="">
+                        <h5>Within a proof</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show proof'"
+                                id="input_side_command_radio5" >
+                            <label class="form-check-label" for="input_side_command_radio5">
+                                show proof
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show goals'"
+                                id="input_side_command_radio6">
+                            <label class="form-check-label" for="input_side_command_radio6">
+                                show goals
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show goal'"
+                                id="input_side_command_radio7">
+                            <label class="form-check-label" for="input_side_command_radio7">
+                                show goal
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show additions'"
+                                id="input_side_command_radio8">
+                            <label class="form-check-label" for="input_side_command_radio8">
+                                show additions
                             </label>
                         </div>
                     </div>
@@ -252,7 +298,7 @@
                     commands: [],
                     currentSession: null,
                     current_session_type: null,
-                    side_command: null,
+                    side_command: 'list goals',
                     side_command_output: null,
                     newCommand: '',
                     user: '{{ user.username }}',

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Session, Command, ExampleFile  # Import the File model
+from .models import Session, Command, ExampleFile, SiteSetting  # Import the File model
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
@@ -15,3 +15,12 @@ class CommandAdmin(admin.ModelAdmin):
 class ExampleFileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'session_type', 'maude', 'program')
     search_fields = ('name', 'session_type')
+
+@admin.register(SiteSetting)
+class SiteSettingAdmin(admin.ModelAdmin):
+    list_display = ('key', 'value')
+    search_fields = ('key',)
+
+    def has_delete_permission(self, request, obj=None):
+        # Disable delete permission in admin
+        return False

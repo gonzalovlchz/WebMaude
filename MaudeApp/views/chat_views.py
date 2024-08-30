@@ -6,7 +6,7 @@ from django.views.generic import ListView, DetailView, CreateView
 from django.conf import settings
 from ansi2html import Ansi2HTMLConverter
 import os
-from ..models import Session, Command, ExampleFile
+from ..models import Session, Command, ExampleFile, SiteSetting
 import pexpect
 import tempfile
 import json
@@ -125,7 +125,7 @@ def post_execute_new_command(request):
 
                 output, side_command_output = executeCITPCommand(maude_previous_file_path, maude_file_path, command_text, side_command)
             else:
-                output = executeCafeInMaudeCommand(maude_previous_file_path, maude_file_path, command_text)
+                output = executeCafeInMaudeCommand(maude_file_path, command_text)
 
             command.output_text = output
             command.save()
@@ -176,35 +176,44 @@ def start_new_session(request):
         "session_id": session.id,
         })
 
-def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, side_command=""):
+def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, side_command="", timeout=None):
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -no-banner -allow-files', encoding='utf-8')
     p.setecho(False)
     p.delaybeforesend = None
     p.expect("Maude>")
-    p.sendline(f"load {previous_maude_file} \n")
-    p.sendline(f"load {settings.CITP_EXECUTABLE_PATH} \n")
-    # Regular expression to match the three patterns
-    citp_pattern = r'CITP(?:/[^ ]*)? >'
-    p.expect(citp_pattern)
-    p.sendline(f"load {previous_citp_file}")
-    p.expect(citp_pattern)
+    # Tiempo de espera predeterminado si no se proporciona uno
+    if timeout is None:
+        timeout = float(SiteSetting.get_setting('timeout'))
+    
+    try:
+        p.sendline(f"load {previous_maude_file} \n")
+        p.sendline(f"load {settings.CITP_EXECUTABLE_PATH} \n")
+        # Regular expression to match the three patterns
+        citp_pattern = r'CITP(?:/[^ ]*)? >'
+        p.expect(citp_pattern, timeout=timeout)
+        p.sendline(f"load {previous_citp_file}")
+        p.expect(citp_pattern, timeout=timeout)
 
-    output_side = ""
-    if side_command!="":
-        p.sendline(side_command)    
-        p.expect(citp_pattern)
-        output_side = p.before.strip()
+        p.sendline(new_command)
+        p.expect(citp_pattern, timeout=timeout)
+        output = p.before.strip()
+        print(output)
 
-    p.sendline(new_command)
-    p.expect(citp_pattern)
-    output = p.before.strip()
-    print(output)
-    # Remove the command from the output
-    if output.startswith(new_command):
-        output = output[len(new_command):].lstrip()
-    return output, output_side
+        output_side = ""
+        if side_command!="":
+            p.sendline(side_command)    
+            p.expect(citp_pattern, timeout=timeout)
+            output_side = p.before.strip()
 
-def executeCafeInMaudeCommand(previous_maude_file, program_file_path, new_command, timeout=None):
+        # Remove the command from the output
+        if output.startswith(new_command):
+            output = output[len(new_command):].lstrip()
+        return output, output_side
+    except pexpect.TIMEOUT:
+            print("Timeout esperando respuesta de CITP")
+            return "Error: Timeout esperando respuesta de CITP", "Error: Timeout esperando respuesta de CITP"
+
+def executeCafeInMaudeCommand(program_file_path, new_command, timeout=None):
     print("Estoy para mandar el comando de cafe")
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -allow-files {settings.CAFE_EXECUTABLE_PATH}', encoding='utf-8')
     p.setecho(False)
@@ -213,22 +222,15 @@ def executeCafeInMaudeCommand(previous_maude_file, program_file_path, new_comman
 
     # Tiempo de espera predeterminado si no se proporciona uno
     if timeout is None:
-        timeout = settings.DEFAULT_TIMEOUT
-    print("pex0")
+        timeout = float(SiteSetting.get_setting('timeout'))
+
     try:
-        print("pex2")
         p.sendline(f"load {program_file_path} .")
-        print("pex3")
         p.expect("CafeInMaude>", timeout=timeout)
-        print("pex4")
         p.sendline(new_command)
-        print("pex5")
         p.expect("CafeInMaude>", timeout=timeout)
-        print("pex6")
         output = p.before.strip()
-        print("pex7")
         print(output)
-        print("pex8")
         # Remove the command from the output
         if output.startswith("> "+new_command):
             output = output[len("> "+new_command):].lstrip()

@@ -45,3 +45,27 @@ class ExampleFile(models.Model):
 
     def __str__(self):
         return f"ExampleFile {self.name} with session type {self.session_type}"
+    
+class SiteSetting(models.Model):
+    key = models.CharField(max_length=50, unique=True)
+    value = models.TextField()
+
+    def __str__(self):
+        return f"{self.key}: {self.value}"
+
+    def delete(self, *args, **kwargs):
+        raise NotImplementedError("Settings cannot be deleted. Please edit the setting instead.")
+
+    @classmethod
+    def get_setting(cls, key, default=None):
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set_setting(cls, key, value):
+        setting, created = cls.objects.get_or_create(key=key)
+        setting.value = value
+        setting.save()
+        return setting
