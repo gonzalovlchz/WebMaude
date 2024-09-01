@@ -177,79 +177,96 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 right-panel" v-if="current_session_type === 'CITP'">
+        <div class="col-md-3 right-panel">
             <div class="right-panel-content">
                 <div class="clearfix mb-3">
-                    <h4>State</h4>
-                    <div class="">
-                        <h5>System-level</h5>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'list goals'"
-                                id="input_side_command_radio1" >
-                            <label class="form-check-label" for="input_side_command_radio1">
-                                list goals
-                            </label>
+                    <div v-if="current_session_type === 'CITP'">
+                        <h4>State</h4>
+                        <div class="">
+                            <h5>System-level</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'list goals'" id="input_side_command_radio1">
+                                <label class="form-check-label" for="input_side_command_radio1">
+                                    list goals
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'list proofs'" id="input_side_command_radio2">
+                                <label class="form-check-label" for="input_side_command_radio2">
+                                    list proofs
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'show goals'" id="input_side_command_radio3">
+                                <label class="form-check-label" for="input_side_command_radio3">
+                                    show goals
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'show proofs'" id="input_side_command_radio4">
+                                <label class="form-check-label" for="input_side_command_radio4">
+                                    show proofs
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'list proofs'"
-                                id="input_side_command_radio2">
-                            <label class="form-check-label" for="input_side_command_radio2">
-                                list proofs
-                            </label>
+                        <div class="">
+                            <h5>Within a proof</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'show proof'" id="input_side_command_radio5">
+                                <label class="form-check-label" for="input_side_command_radio5">
+                                    show proof
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'show goals'" id="input_side_command_radio6">
+                                <label class="form-check-label" for="input_side_command_radio6">
+                                    show goals
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'show goal'" id="input_side_command_radio7">
+                                <label class="form-check-label" for="input_side_command_radio7">
+                                    show goal
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="'show additions'" id="input_side_command_radio8">
+                                <label class="form-check-label" for="input_side_command_radio8">
+                                    show additions
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show goals'"
-                                id="input_side_command_radio3">
-                            <label class="form-check-label" for="input_side_command_radio3">
-                                show goals
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show proofs'"
-                                id="input_side_command_radio4">
-                            <label class="form-check-label" for="input_side_command_radio4">
-                                show proofs
-                            </label>
-                        </div>
+                        <div v-html="side_command_output" class="message maude"></div>
                     </div>
-                    <div class="">
-                        <h5>Within a proof</h5>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show proof'"
-                                id="input_side_command_radio5" >
-                            <label class="form-check-label" for="input_side_command_radio5">
-                                show proof
-                            </label>
+                    <div v-if="current_session_type === 'cafeInMaude'">
+                        <h4>State</h4>
+                        <div class="">
+                            <h5>Within a proof</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="':show proof .'" id="input_side_command_radio9">
+                                <label class="form-check-label" for="input_side_command_radio9">
+                                    show proof
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="':desc .'" id="input_side_command_radio10">
+                                <label class="form-check-label" for="input_side_command_radio10">
+                                    displays goal
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" v-model="side_command" :value="':desc proof .'" id="input_side_command_radio11">
+                                <label class="form-check-label" for="input_side_command_radio11">
+                                    depicts complete proof tree
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show goals'"
-                                id="input_side_command_radio6">
-                            <label class="form-check-label" for="input_side_command_radio6">
-                                show goals
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show goal'"
-                                id="input_side_command_radio7">
-                            <label class="form-check-label" for="input_side_command_radio7">
-                                show goal
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" v-model="side_command" :value="'show additions'"
-                                id="input_side_command_radio8">
-                            <label class="form-check-label" for="input_side_command_radio8">
-                                show additions
-                            </label>
-                        </div>
+                        <div v-html="side_command_output" class="message maude"></div>
                     </div>
-
-                    <div v-html="side_command_output" class="message maude"></div>
                 </div>
-
             </div>
-
         </div>
+        
 
         <!-- Modal -->
         <div class="modal fade" id="modal_new_session" tabindex="-1" aria-labelledby="modal_label_new_session"
@@ -308,6 +325,11 @@
             },
             mounted() {
                 this.getAllSessions();
+
+                if (this.sessions.length === 0) {
+                    this.select_session_type = 'cafeInMaude';
+                    this.startNewSession();
+                }
             },
             watch: {
                 currentSession: function (val) {
@@ -400,9 +422,7 @@
 
 
                     // Agrega la opción de CafeInMaude si está seleccionada
-                    if (this.current_session_type === 'CITP') {
                         data.append("side_command", this.side_command);
-                    }
 
                     data.append('session', this.currentSession);
                     data.append("command", commandText);
