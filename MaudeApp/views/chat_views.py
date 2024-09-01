@@ -118,14 +118,14 @@ def post_execute_new_command(request):
 
             # Execute command based on session type
             side_command_output=""
+            side_command = ""
+            if 'side_command' in request.POST:
+                side_command = request.POST["side_command"]
+                print(side_command)
             if session.session_type == 'CITP':
-                side_command = ""
-                if 'side_command' in request.POST:
-                    side_command = request.POST["side_command"]
-
                 output, side_command_output = executeCITPCommand(maude_previous_file_path, maude_file_path, command_text, side_command)
             else:
-                output = executeCafeInMaudeCommand(maude_file_path, command_text)
+                output, side_command_output = executeCafeInMaudeCommand(maude_file_path, command_text, side_command)
 
             command.output_text = output
             command.save()
@@ -213,7 +213,7 @@ def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, sid
             print("Timeout esperando respuesta de CITP")
             return "Error: Timeout esperando respuesta de CITP", "Error: Timeout esperando respuesta de CITP"
 
-def executeCafeInMaudeCommand(program_file_path, new_command, timeout=None):
+def executeCafeInMaudeCommand(program_file_path, new_command, side_command="", timeout=None):
     print("Estoy para mandar el comando de cafe")
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -allow-files {settings.CAFE_EXECUTABLE_PATH}', encoding='utf-8')
     p.setecho(False)
@@ -231,10 +231,18 @@ def executeCafeInMaudeCommand(program_file_path, new_command, timeout=None):
         p.expect("CafeInMaude>", timeout=timeout)
         output = p.before.strip()
         print(output)
+
+        output_side = ""
+        if side_command != "":
+            p.sendline(side_command)    
+            p.expect("CafeInMaude>", timeout=timeout)
+            output_side = p.before.strip()
+            print(output_side)
+
         # Remove the command from the output
         if output.startswith("> "+new_command):
             output = output[len("> "+new_command):].lstrip()
-        return output
+        return output, output_side
     
     except pexpect.TIMEOUT:
         print("Timeout esperando respuesta de CafeInMaude")
