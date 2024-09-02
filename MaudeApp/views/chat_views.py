@@ -8,9 +8,51 @@ from ansi2html import Ansi2HTMLConverter
 import os
 from ..models import Session, Command, ExampleFile, SiteSetting
 import pexpect
-import tempfile
-import json
 
+# Additional views for session management
+@login_required
+def start_new_session(request):
+    if request.method == 'POST':
+        user = request.user
+        session_type = request.POST.get("sessionType", "cafeInMaude")
+        session = Session.objects.create(user=user, session_type=session_type)
+        # Obtener la ruta del archivo .maude
+        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/{session.id}")
+        # Crear la carpeta si no existe
+        os.makedirs(os.path.dirname(maude_file_path), exist_ok=True)
+        # Crear el archivo vacío
+        with open(maude_file_path, 'w') as maude_file:
+            pass  # Crear el archivo vacío
+
+        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous")
+        # Crear el archivo vacío
+        with open(maude_previous_file_path, 'w') as maude_file:
+            pass  # Crear el archivo vacío
+
+        for file in request.FILES.getlist('file[]'):
+            with open(maude_previous_file_path, 'ab') as dest:
+                if file.multiple_chunks():
+                    for chunk in file.chunks():
+                        dest.write(chunk)
+                else:
+                    dest.write(file.read())
+
+        # Continuar con el resto de la lógica
+        return JsonResponse({
+            "session_id": session.id,
+        })
+    
+@login_required    
+def get_all_sessions(request):
+    if request.method == 'GET':
+        # Get all sessions for the current user
+        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at', 'session_type')
+
+        # Convert the queryset to a list to return as JSON
+        sessions_list = list(sessions)
+
+        return JsonResponse({'sessions': sessions_list})
+    
 @login_required 
 def get_chat_session(request):
     if request.method == 'GET':
@@ -33,18 +75,6 @@ def get_chat_session(request):
 
         return JsonResponse({"commands": commands_list, "sessionType": session.session_type})
 
-
-@login_required    
-def get_all_sessions(request):
-    if request.method == 'GET':
-        # Get all sessions for the current user
-        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at', 'session_type')
-
-        # Convert the queryset to a list to return as JSON
-        sessions_list = list(sessions)
-
-        return JsonResponse({'sessions': sessions_list})
-
 @login_required
 def get_files_by_session_type(request):
     if request.method == 'GET':
@@ -62,6 +92,7 @@ def get_files_by_session_type(request):
 
         return JsonResponse({'example_files': example_files_list})
 
+@login_required
 def post_execute_new_command(request):
     if request.method == 'POST':
         
@@ -121,7 +152,7 @@ def post_execute_new_command(request):
             side_command = ""
             if 'side_command' in request.POST:
                 side_command = request.POST["side_command"]
-                print(side_command)
+
             if session.session_type == 'CITP':
                 output, side_command_output = executeCITPCommand(maude_previous_file_path, maude_file_path, command_text, side_command)
             else:
@@ -140,41 +171,21 @@ def post_execute_new_command(request):
             "side_command_output": conv.convert(side_command_output),
             })
         else:
-            return True
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+            side_command_output=""
+            if 'side_command' in request.POST:
+                side_command = request.POST["side_command"]
 
-# Additional views for session management
-@login_required
-def start_new_session(request):
-    if request.method == 'POST':
-        user = request.user
-        session_type = request.POST.get("sessionType", "cafeInMaude")
-        session = Session.objects.create(user=user, session_type=session_type)
-        # Obtener la ruta del archivo .maude
-        maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/{session.id}")
-        # Crear la carpeta si no existe
-        os.makedirs(os.path.dirname(maude_file_path), exist_ok=True)
-        # Crear el archivo vacío
-        with open(maude_file_path, 'w') as maude_file:
-            pass  # Crear el archivo vacío
+            if session.session_type == 'CITP':
+                _, side_command_output = executeCITPCommand(maude_previous_file_path, maude_file_path, "_", side_command)
+            else:
+                _, side_command_output = executeCafeInMaudeCommand(maude_file_path, "_", side_command)
 
-        maude_previous_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/previous")
-        # Crear el archivo vacío
-        with open(maude_previous_file_path, 'w') as maude_file:
-            pass  # Crear el archivo vacío
+            conv = Ansi2HTMLConverter()
+            return JsonResponse({
+            "side_command_output": conv.convert(side_command_output),
+            })
+    return JsonResponse({'error': 'Invalid request'}, status=501)
 
-        for file in request.FILES.getlist('file[]'):
-            with open(maude_previous_file_path, 'ab') as dest:
-                if file.multiple_chunks():
-                    for chunk in file.chunks():
-                        dest.write(chunk)
-                else:
-                    dest.write(file.read())
-
-        # Continuar con el resto de la lógica
-        return JsonResponse({
-        "session_id": session.id,
-        })
 
 def executeCITPCommand(previous_maude_file, previous_citp_file, new_command, side_command="", timeout=None):
     p = pexpect.spawnu(f'{settings.MAUDE_EXECUTABLE_PATH} -no-banner -allow-files', encoding='utf-8')
@@ -246,4 +257,4 @@ def executeCafeInMaudeCommand(program_file_path, new_command, side_command="", t
     
     except pexpect.TIMEOUT:
         print("Timeout esperando respuesta de CafeInMaude")
-        return "Error: Timeout esperando respuesta de CafeInMaude"
+        return "Error: Timeout esperando respuesta de CafeInMaude", "Error: Timeout esperando respuesta de CITP"

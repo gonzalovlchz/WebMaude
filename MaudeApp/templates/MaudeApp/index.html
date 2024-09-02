@@ -236,7 +236,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div v-html="side_command_output" class="message maude"></div>
+                        
                     </div>
                     <div v-if="current_session_type === 'cafeInMaude'">
                         <h4>State</h4>
@@ -261,8 +261,9 @@
                                 </label>
                             </div>
                         </div>
-                        <div v-html="side_command_output" class="message maude"></div>
+                        
                     </div>
+                    <div v-html="side_command_output" class="message maude "></div>
                 </div>
             </div>
         </div>
@@ -325,11 +326,6 @@
             },
             mounted() {
                 this.getAllSessions();
-
-                if (this.sessions.length === 0) {
-                    this.select_session_type = 'cafeInMaude';
-                    this.startNewSession();
-                }
             },
             watch: {
                 currentSession: function (val) {
@@ -339,12 +335,13 @@
                         .then(data => {
                             this.commands = data.commands;
                             this.current_session_type = data.sessionType;
-
+                            this.side_command_output = "";
                             fetch('/chat/get_files_by_session_type?session_type=' + data.sessionType)
                                 .then(response => response.json())
                                 .then(data => {
                                     console.log(data);
                                     let select = document.getElementById('select_preloaded_examples');
+                                    select.innerHTML='<option value="" selected>Seleccionar ejemplo</option>';
                                     data.example_files.forEach(function (eF) {
                                         select.add(new Option(eF.name));
                                     });
@@ -394,18 +391,19 @@
                         .then(data => {
                             this.getAllSessions();
                             this.modal_new_session.hide();
-                            sessionFile.value = null;
+                            if(sessionFile) sessionFile.value = null;
                             this.currentSession = data.session_id;
                         });
                 },
                 sendCommand() {
-
-                    if (this.newCommand.trim() === '') return;
-                    const commandText = this.newCommand.trim();
-                    this.commands.push({ input_text: commandText, output_text: 'Sending...' });
-                    this.newCommand = '';
-
                     var data = new FormData();
+
+                    if (this.newCommand.trim() !== ''){
+                        const commandText = this.newCommand.trim();
+                        this.commands.push({ input_text: commandText, output_text: 'Sending...' });
+                        this.newCommand = '';
+                        data.append("command", commandText);
+                    }
 
                     var chatFile = document.getElementById("input_chat_file");
                     for (const file of chatFile.files) {
@@ -419,13 +417,9 @@
                         data.append('exampleFile', selectElementExamples.value);
                     }
                     selectElementExamples.selectedIndex = 0;
-
-
-                    // Agrega la opción de CafeInMaude si está seleccionada
-                        data.append("side_command", this.side_command);
-
+                    
+                    data.append("side_command", this.side_command);
                     data.append('session', this.currentSession);
-                    data.append("command", commandText);
 
                     fetch("/chat/post_execute_new_command", {
                         method: "POST",
@@ -437,7 +431,7 @@
                         .then(response => response.json())
                         .then(data => {
                             console.log(data);
-                            if (data.output.trim() !== "") {
+                            if ("output" in data && data.output.trim() !== "") {
                                 this.commands[this.commands.length - 1].output_text = data.output;
                             }
                             if (data.side_command_output.trim() !== "") {
