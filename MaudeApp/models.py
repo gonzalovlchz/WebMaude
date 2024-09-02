@@ -16,6 +16,7 @@ class Session(models.Model):
 
     def __str__(self):
         return f"Session {self.id} for {self.user.username}"
+    
 
 class Command(models.Model):
     session = models.ForeignKey(Session, related_name='commands', on_delete=models.CASCADE)
@@ -69,3 +70,4 @@ class SiteSetting(models.Model):
         setting.value = value
         setting.save()
         return setting
+    

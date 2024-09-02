@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import Session, Command, ExampleFile, SiteSetting  # Import the File model
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
@@ -24,3 +26,15 @@ class SiteSettingAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Disable delete permission in admin
         return False
+    
+def approve_user(modeladmin, request, queryset):
+    queryset.update(is_active=True)
+
+approve_user.short_description = "Approve selected users"
+
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'is_active', 'is_staff')
+    actions = [approve_user]
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)

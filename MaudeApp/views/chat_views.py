@@ -11,7 +11,7 @@ import pexpect
 
 # Additional views for session management
 @login_required
-def start_new_session(request):
+def get_start_new_session(request):
     if request.method == 'POST':
         user = request.user
         session_type = request.POST.get("sessionType", "cafeInMaude")

@@ -3,8 +3,8 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 
 @login_required
-def index(request):
+def get_index(request):
     return render(request, 'MaudeApp/index.html')
 
-def login_form(request):
+def get_login_form(request):
     return render(request, 'MaudeApp/login_form.html')
