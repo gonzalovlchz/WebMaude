@@ -15,7 +15,8 @@ def get_start_new_session(request):
     if request.method == 'POST':
         user = request.user
         session_type = request.POST.get("sessionType", "cafeInMaude")
-        session = Session.objects.create(user=user, session_type=session_type)
+        name = request.POST.get("name", "")
+        session = Session.objects.create(user=user, name=name, session_type=session_type)
         # Obtener la ruta del archivo .maude
         maude_file_path = os.path.join(settings.MAUDE_FILES_DIR, f"{session.id}/{session.id}")
         # Crear la carpeta si no existe
@@ -46,7 +47,7 @@ def get_start_new_session(request):
 def get_all_sessions(request):
     if request.method == 'GET':
         # Get all sessions for the current user
-        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at', 'session_type')
+        sessions = Session.objects.filter(user=request.user).values('id', 'created_at', 'updated_at', 'session_type', 'name')
 
         # Convert the queryset to a list to return as JSON
         sessions_list = list(sessions)

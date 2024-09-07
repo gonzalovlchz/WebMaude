@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'WebMaude.urls'
@@ -117,18 +118,19 @@ USE_I18N = True
 USE_TZ = True
 
 
+SCRIPT_NAME = os.getenv('SCRIPT_NAME', '')
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL =  'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = '/login'
+LOGIN_URL = os.getenv('SCRIPT_NAME', '') + '/login'
 
 # settings.py
 MAUDE_FILES_DIR = os.path.join(BASE_DIR, 'maude_files')

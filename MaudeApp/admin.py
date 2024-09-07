@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'session_type', 'created_at', 'updated_at')  # Added session_type to display
+    list_display = ('id', 'user', 'session_type', 'name', 'created_at', 'updated_at')  # Added session_type to display
     search_fields = ('user__username', 'session_type')  # Added session_type to search
 
 @admin.register(Command)
