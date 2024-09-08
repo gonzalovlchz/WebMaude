@@ -124,6 +124,7 @@ APP_URL_PREFIX = os.getenv("APP_URL_PREFIX", "")
 
 STATIC_URL = APP_URL_PREFIX + 'static/'
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
