@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -189,7 +190,7 @@
                 <div class="user-info mt-3">
                 <p>Logged in as:</p>
                 <strong>{{ user }}</strong>
-                <a href="/acl/logout" class="btn btn-sm btn-danger mt-2">Logout</a>
+                <a href="{% url 'get_logout' %}" class="btn btn-sm btn-danger mt-2">Logout</a>
                 </div>
             </div>
             </div>
@@ -212,7 +213,7 @@
             <div class="user-info">
             <p>Logged in as:</p>
             <strong>{{ user }}</strong>
-            <a href="/acl/logout" class="btn btn-sm btn-danger mt-2">Logout</a>
+            <a href="{% url 'get_logout' %}" class="btn btn-sm btn-danger mt-2">Logout</a>
             </div>
         </div>
         
@@ -416,13 +417,13 @@
             watch: {
                 currentSession: function (val) {
                     this.commands = [];
-                    fetch(`/chat/get_chat_session?session=${val}`)
+                    fetch(`{% url 'get_chat_session' %}?session=${val}`)
                         .then(response => response.json())
                         .then(data => {
                             this.commands = data.commands;
                             this.current_session_type = data.sessionType;
                             this.side_command_output = "";
-                            fetch('/chat/get_files_by_session_type?session_type=' + data.sessionType)
+                            fetch('{% url "get_files_by_session_type" %}?session_type=' + data.sessionType)
                                 .then(response => response.json())
                                 .then(data => {
                                     console.log(data);
@@ -438,7 +439,7 @@
             },
             methods: {
                 getAllSessions() {
-                    fetch("/chat/get_all_sessions")
+                    fetch("{% url 'get_all_sessions' %}")
                         .then(response => response.json())
                         .then(data => {
                             console.log("Original data from server:", data); // Log the raw data
@@ -470,7 +471,7 @@
                     data.append("sessionType", this.select_session_type);
                     data.append("name", this.input_session_name);
 
-                    fetch("/chat/start_new_session", {
+                    fetch("{% url 'get_start_new_session' %}", {
                         method: "POST",
                         headers: { 'X-CSRFToken': '{{ csrf_token }}' },
                         body: data,
@@ -509,7 +510,7 @@
                     data.append("side_command", this.side_command);
                     data.append('session', this.currentSession);
 
-                    fetch("/chat/post_execute_new_command", {
+                    fetch("{% url 'post_execute_new_command' %}", {
                         method: "POST",
                         headers: {
                             'X-CSRFToken': '{{ csrf_token }}',

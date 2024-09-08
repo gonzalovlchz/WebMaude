@@ -21,8 +21,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("", include("MaudeApp.urls")),
+    path(settings.APP_URL_PREFIX, include([
+        path("admin/", admin.site.urls),
+        path("", include("MaudeApp.urls")),
+    ]))
 ]
 
 urlpatterns += staticfiles_urlpatterns()

@@ -117,20 +117,19 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-SCRIPT_NAME = os.getenv('SCRIPT_NAME', '')
+APP_URL_PREFIX = os.getenv("APP_URL_PREFIX", "")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL =  'static/'
+STATIC_URL = APP_URL_PREFIX + 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = os.getenv('SCRIPT_NAME', '') + '/login'
+LOGIN_URL = 'get_login_form'
 
 # settings.py
 MAUDE_FILES_DIR = os.path.join(BASE_DIR, 'maude_files')
@@ -149,7 +148,7 @@ DEFAULT_TIMEOUT = 30
 
 # Directory where uploaded files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'  # URL to access media files in development
+MEDIA_URL =  APP_URL_PREFIX + 'media/'  # URL to access media files in development
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'dark',

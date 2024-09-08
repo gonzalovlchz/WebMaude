@@ -15,7 +15,7 @@ def post_login(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return redirect("/")
+                return redirect("get_index")
             else:
                 messages.error(request, 'Your account is pending approval. Please contact support if you believe this is an error.')
         else:
@@ -29,12 +29,12 @@ def post_login(request):
             except User.DoesNotExist:
                 messages.error(request, 'Invalid username or password.')
     
-    return redirect('/login')
+    return redirect('get_login_form')
 
 def get_logout(request):
     logout(request)
     messages.info(request, 'You have been logged out.')
-    return redirect('/login')
+    return redirect('get_login_form')
 
 def post_signup(request):
     if request.method == 'POST':
@@ -47,19 +47,19 @@ def post_signup(request):
         # Validate input data
         if not username or not email or not password1 or not password2:
             messages.error(request, 'All fields are required.')
-            return redirect('/login?a=1')
+            return redirect('get_login_form')
 
         if password1 != password2:
             messages.error(request, 'Passwords do not match.')
-            return redirect('/login?a=2')
+            return redirect('get_login_form')
 
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username is already taken.')
-            return redirect('/login?a=3')
+            return redirect('get_login_form')
 
         if User.objects.filter(email=email).exists():
             messages.error(request, 'Email is already in use.')
-            return redirect('/login?a=4')
+            return redirect('get_login_form')
 
         # Create new user but set is_active to False until admin approval
         user = User.objects.create(
@@ -70,4 +70,4 @@ def post_signup(request):
         )
 
         messages.success(request, 'Your account has been created. Please wait for admin approval.')
-        return redirect('/login')
+        return redirect('get_login_form')
