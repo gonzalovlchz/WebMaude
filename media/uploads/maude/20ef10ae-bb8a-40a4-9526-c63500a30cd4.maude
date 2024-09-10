@@ -1,0 +1,114 @@
+*** ----------------------------------------------------------------------------
+*** Assume that many agents (or processes) are competting for a common resource,
+*** but that at any given moment of time only one agent can use the resource.
+*** That is, the agents exclude or prevent each other from accessing the resource.
+*** A protocol that can gurantee this kind of mutual-exclusion property is called a mutual exclusion protocol.
+*** ----------------------------------------------------------------------------
+
+fmod EQUAL is
+ op _=?_ :  Universal Universal -> Bool  [comm prec 51 poly (1 2) metadata "equality"].
+endfm
+
+fmod SECTION is
+ inc EQUAL .
+ sort Section .
+ ops rm wt cs : -> Section [ctor].
+ var S : Section .
+ eq S =? S = true .
+ eq (rm =? wt) = false .
+ eq (rm =? cs) = false .
+ eq (wt =? cs) = false .
+endfm
+
+fth PRID is inc BOOL .
+ inc EQUAL .
+ sort Pid .
+ vars I J : Pid .
+ eq I =? I = true .
+endfth
+
+fmod SEQUENCE{X :: PRID} is
+ sort Sequence .
+ subsorts X$Pid < Sequence .
+ inc NAT .
+ var N : Nat .
+--- constructors 
+ op empty : -> Sequence [ctor] .
+ op _`,_ : Sequence Sequence -> Sequence [ctor id: empty assoc].
+ vars Q Q' : Sequence . vars I J : X$Pid .
+--- 
+ op head : Sequence ~> X$Pid .
+ eq head(I,Q) = I .
+ceq head(Q,I) = head(Q) if head(Q) : X$Pid [owise].
+---
+ op tail : Sequence -> Sequence [iter] .
+ eq tail(empty) = empty .
+ eq tail(I,Q) = Q .
+--- --- ---
+ op drop : Nat Sequence -> Sequence .
+ eq drop(0,Q) = Q .
+ eq drop(s N,Q) = drop(N,tail(Q)). 
+---
+ op _in_ : X$Pid Sequence -> Bool .
+ eq I in empty = false . 
+ceq I in Q,J,Q' = true      if I = J .
+ceq I in Q,J,Q' = I in Q,Q' if I =? J = false .
+ceq I in Q = false if I =? head(Q) = false /\ I in tail(Q) = false [owise].
+endfm
+
+mod QLOCK{X :: PRID} is
+ inc SEQUENCE{X} .
+ inc SECTION .
+ sort Sys .
+ --- actions
+ op init : -> Sys [ctor].
+ops want try exit : Sys X$Pid -> Sys [ctor].
+--- observers
+ op pc : Sys X$Pid -> Section .
+ op queue : Sys -> Sequence .
+---
+ var S : Sys . vars I J K : X$Pid . var Q : Sequence .
+--- init ---
+ eq pc(init,I) = rm  .
+ eq queue(init) = empty .
+--- want ---
+ceq pc(want(S,I),J) = wt      if pc(S,I) = rm /\ J = I          [metadata "ca:w1"].
+ceq pc(want(S,I),J) = pc(S,J) if pc(S,I) = rm /\ J =? I = false [metadata "ca:w2"].
+ceq pc(want(S,I),J) = pc(S,J) if pc(S,I) =? rm = false          [metadata "ca:w3"].
+ceq queue(want(S,I)) = queue(S),I if pc(S,I) = rm .
+ceq queue(want(S,I)) = queue(S)   if pc(S,I) =? rm = false .
+--- try ---
+ceq pc(try(S,I),J) = cs      if pc(S,I) = wt /\ I,Q := queue(S) /\ J = I [metadata "ca:t1"].
+ceq pc(try(S,I),J) = pc(S,J) if (J =? I) = false                         [metadata "ca:t2"].
+ceq pc(try(S,I),J) = pc(S,J) if pc(S,I) =? wt = false                    [metadata "ca:t3"].
+ceq pc(try(S,I),J) = pc(S,J) if head(queue(S)) =? I = false              [metadata "ca:t4"].
+ eq queue(try(S,I)) = queue(S) . 
+--- exit ---
+ceq pc(exit(S,I),J) = rm       if pc(S,I) = cs /\ J = I          [metadata "ca:e1"].
+ceq pc(exit(S,I),J) = pc(S,J)  if pc(S,I) = cs /\ I =? J = false [metadata "ca:e2"].
+ceq pc(exit(S,I),J) = pc(S,J)  if pc(S,I) =? cs = false          [metadata "ca:e3"].
+ceq queue(exit(S,I)) = tail(queue(S)) if pc(S,I) = cs .
+ceq queue(exit(S,I)) = queue(S)       if pc(S,I) =? cs = false .
+--- --- ---
+ rl want(S,I)=> S [metadata "want"].
+ rl try(S,I) => S [metadata "try"].
+ rl exit(S,I)=> S [metadata "exit"].
+--- --- ---
+endm
+
+mod RESET{X :: PRID} is
+ inc QLOCK{X} .
+ var S : Sys .
+ var I : X$Pid .
+ var Q : Sequence .
+ var N : Nat .
+--- --- ---
+ op reset : Sys -> Sys [iter] .
+ceq reset(S) = S if queue(S) = empty [metadata "ca:r1"].
+ceq reset(S) = exit(try(S,I),I) if I,Q := queue(S) /\ pc(S,I) = wt [metadata "ca:r2"].
+ceq reset(S) = exit(S,I)        if I,Q := queue(S) /\ pc(S,I) = cs [metadata "ca:r3"].
+--- --- ---
+ op reset : Sys Nat -> Sys .
+ eq reset(S,0) = S .
+ eq reset(S,s N)= reset(reset(S),N).
+endm

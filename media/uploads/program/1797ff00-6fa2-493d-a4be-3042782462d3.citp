@@ -1,0 +1,26 @@
+*** ----------------------------------------------------------------------------
+
+goal INF is
+|-{FG}
+  fm forall {M:Nat} s^9(0) <= G(F(M:Nat)) + G(M:Nat) = true .
+endg
+
+begin proof PI of INF
+  tc ca red
+  trans red
+qed
+
+
+*** ----------------------------------------------------------------------------
+
+goal TOTAL is
+|-{LEQ}
+  fm forall {M:Nat, N:Nat} M:Nat <= N:Nat = true \/ N:Nat <= M:Nat = true
+     [metadata "total"] .
+endg
+
+begin proof PT of TOTAL
+  ind(M:Nat, N:Nat) red
+qed
+
+*** ----------------------------------------------------------------------------

@@ -1,0 +1,68 @@
+*** ----------------------------------------------------------------------------
+*** The aim is to prove that every connected graph has a spanning tree.
+*** In the attempt of proving that every connected graph has a spanning tree,
+*** we realized that it is much easier to prove a more general property: every graph has a spanning forest.
+
+*** A spanning forest of a graph is a subgraph that consists of a set of spanning trees,
+*** one for each maximally connected component of the initial graph.
+*** ----------------------------------------------------------------------------
+
+
+*** ----------------------------------------------------------------------------
+*** THEOREM 1: mktree preserves the maximal connected componets of each vertex.
+*** ----------------------------------------------------------------------------
+
+goal THEOREM1 is
+|-{GRAPH}
+  fm forall {G:Graph, V:X$Vertex}
+     mcc(V:X$Vertex, mktree(G:Graph)) = mcc(V:X$Vertex, G:Graph)
+     [metadata "theorem1"] .
+endg
+
+begin proof PR.TH1 of THEOREM1
+  ind-schema(G:Graph) red
+  ind(Z#1:Edge)
+  tc imp tc
+  ca ca-rev push-all red
+qed
+
+*** ----------------------------------------------------------------------------
+*** THEOREM 2: mktree preserves the number of maximally connected componets.
+*** ----------------------------------------------------------------------------
+
+goal THEOREM2 is
+  fm forall {G:Graph, V:X$Vertex}
+     mcc(V:X$Vertex, mktree(G:Graph)) = mcc(V:X$Vertex, G:Graph)
+     [metadata "theorem1"] .
+|-{GRAPH}
+  fm forall {G:Graph,V:X$Vertex} nomcc(mktree(G:Graph)) = nomcc(G:Graph)
+     [metadata "theorem2"] .
+endg
+
+begin proof PR.TH2 of THEOREM2
+  ind-schema(G:Graph) red
+  ind(Z#1:Edge)
+  tc imp
+  ca push-all red
+qed
+
+*** ----------------------------------------------------------------------------
+*** THEOREM 3: mktree eliminates the cycles.
+*** ----------------------------------------------------------------------------
+
+goal THEOREM3 is
+  fm mcc(V:X$Vertex,mktree(G:Graph)) = mcc(V:X$Vertex,G:Graph)
+     [metadata "theorem1"] .
+  fm nomcc(mktree(G:Graph)) = nomcc(G:Graph) [metadata "theorem2"] .
+|-{GRAPH}
+  fm forall {G:Graph} nocycle(mktree(G:Graph)) = true [metadata "theorem3"] .
+endg
+
+begin proof PR.TH3 of THEOREM3
+  ind-schema(G:Graph) red
+  ind(Z#1:Edge)
+  tc imp
+  ca push-all red
+qed
+
+*** ----------------------------------------------------------------------------
