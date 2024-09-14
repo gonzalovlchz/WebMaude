@@ -258,4 +258,4 @@ def executeCafeInMaudeCommand(program_file_path, new_command, side_command="", t
     
     except pexpect.TIMEOUT:
         print("Timeout esperando respuesta de CafeInMaude")
-        return "Error: Timeout esperando respuesta de CafeInMaude", "Error: Timeout esperando respuesta de CITP"
+        return "Error: Timeout esperando respuesta de CafeInMaude", "Error: Timeout esperando respuesta de CafeInMaude"
